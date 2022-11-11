@@ -3,6 +3,7 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv"
 import joi from "joi";
+import dayjs from "dayjs"
 
 
 const userSchema = joi.object({
@@ -29,27 +30,41 @@ try {
 }
 
 const db = mongoClient.db("Batepapo_UOL");
-const participants = db.collection("participants");
-const messages = db.collection("messages");
+const userscollections = db.collection("participants");
+const messagescolletiosn = db.collection("messages");
 
 
 app.post("/participants", async (req, res) => {
 
+    const { name } = req.body
     const validation = userSchema.validate(req.body, { abortEarly: false });
 
     if (validation.error) {
 
-    res.send(validation.error.message);
-    return;
+        res.status(422).send(validation.error.message);
+        return;
     }
-    
+
     try {
-        res.send("deu bom")
+
+        const userExists = await userscollections.find({ name: name.toLowerCase() })
+
+        if (userExists) {
+
+            res.status(409).send("Usuario já existente");
+            return;
+        }
+
+        await userscollections.insertOne({name: name.toLowerCase(), lastStatus: Date.now()});
+        await messagescolletiosn.insertOne({from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss")});
+        res.sendStatus(201);
     } catch (error) {
-        console.log("deu ruim");
+        console.log(error);
+        res.sendStatus(500);
     }
 
 });
+
 
 
 app.listen(5000, () => console.log("Server running in port 5000"));
