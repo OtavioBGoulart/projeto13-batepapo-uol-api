@@ -47,16 +47,17 @@ app.post("/participants", async (req, res) => {
 
     try {
 
-        const userExists = await userscollections.find({ name: name.toLowerCase() })
+        const userExists = await userscollections.find({ name: name.toLowerCase() }).toArray();
+        console.log(userExists);
 
-        if (userExists) {
+        if (userExists.length !== 0) {
 
             res.status(409).send("Usuario já existente");
             return;
         }
 
-        await userscollections.insertOne({name: name.toLowerCase(), lastStatus: Date.now()});
-        await messagescolletiosn.insertOne({from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss")});
+        await userscollections.insertOne({ name: name.toLowerCase(), lastStatus: Date.now() });
+        await messagescolletiosn.insertOne({ from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -64,6 +65,17 @@ app.post("/participants", async (req, res) => {
     }
 
 });
+
+app.get("/participants", async (req, res) => {
+
+    try {
+        const participants = await userscollections.find().toArray();
+        res.send(participants);
+    } catch {
+        res.sendStatus(500);
+    }
+    
+})
 
 
 
