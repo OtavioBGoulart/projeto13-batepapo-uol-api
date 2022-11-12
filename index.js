@@ -63,7 +63,7 @@ app.post("/participants", async (req, res) => {
         }
 
         await userscollections.insertOne({ name: name.toLowerCase(), lastStatus: Date.now() });
-        await messagescolletiosn.insertOne({ from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
+        await messagescolletiosn.insertOne({ from: name.toLowerCase(), to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -107,7 +107,7 @@ app.post("/messages", async(req, res) => {
             return;
         }
 
-        await messagescolletiosn.insertOne({ from: user.toLowerCase(), to: to, text: text, type: type, time: dayjs().format("HH:mm:ss") });
+        await messagescolletiosn.insertOne({ from: user.toLowerCase(), to: to.toLowerCase(), text: text, type: type, time: dayjs().format("HH:mm:ss") });
         res.sendStatus(201);
 
     } catch {
@@ -117,6 +117,29 @@ app.post("/messages", async(req, res) => {
 
 })
 
+app.get("/messages", async(req, res) => {
+
+    const { limit } = req.query;
+    const { user } = req.headers;
+    let messages;
+
+    try {
+        
+        if (limit) { 
+            
+            messages = await messagescolletiosn.find({$or: [{to: "Todos"}, {to: user.toLowerCase()}, {from: user.toLowerCase()}, { type: "message"}]}).toArray();
+            const lastMessages = messages.slice(-limit);
+            res.send(lastMessages);
+            return;
+        }
+
+        messages = await messagescolletiosn.find({$or: [{to: "Todos"}, {to: user.toLowerCase()}, {from: user.toLowerCase()}, { type: "message"}]}).toArray();
+        res.send(messages);
+
+    } catch {
+    res.sendStatus(500)
+    }
+})
 
 
 app.listen(5000, () => console.log("Server running in port 5000")); 
