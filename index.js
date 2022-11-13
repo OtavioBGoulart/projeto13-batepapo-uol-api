@@ -83,7 +83,7 @@ app.get("/participants", async (req, res) => {
 
 })
 
-app.post("/messages", async(req, res) => {
+app.post("/messages", async (req, res) => {
 
     const { to, text, type } = req.body;
     const user = req.headers.user
@@ -100,7 +100,7 @@ app.post("/messages", async(req, res) => {
 
     try {
 
-        const userExists = await userscollections.find({ name: to.toLowerCase() }).toArray();
+        const userExists = await userscollections.find({ name: user.toLowerCase() }).toArray();
 
         if (userExists.length == 0) {
             res.status(422).send("Esse participante não existe")
@@ -117,27 +117,50 @@ app.post("/messages", async(req, res) => {
 
 })
 
-app.get("/messages", async(req, res) => {
+app.get("/messages", async (req, res) => {
 
     const { limit } = req.query;
     const { user } = req.headers;
     let messages;
 
     try {
-        
-        if (limit) { 
-            
-            messages = await messagescolletiosn.find({$or: [{to: "Todos"}, {to: user.toLowerCase()}, {from: user.toLowerCase()}, { type: "message"}]}).toArray();
+
+        if (limit) {
+
+            messages = await messagescolletiosn.find({ $or: [{ to: "Todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
             const lastMessages = messages.slice(-limit);
             res.send(lastMessages);
             return;
         }
 
-        messages = await messagescolletiosn.find({$or: [{to: "Todos"}, {to: user.toLowerCase()}, {from: user.toLowerCase()}, { type: "message"}]}).toArray();
+        messages = await messagescolletiosn.find({ $or: [{ to: "Todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
         res.send(messages);
 
     } catch {
-    res.sendStatus(500)
+        res.sendStatus(500)
+    }
+})
+
+app.post("/status", async (req, res) => {
+
+    const { user } = req.headers;
+
+    try {
+
+        const userExists = await userscollections.find({ name: user.toLowerCase() }).toArray();
+
+        if (userExists.length == 0) {
+            res.sendStatus(404)
+            return;
+        }
+
+        console.log(userExists);
+
+        await userscollections.updateOne({name: user.toLowerCase()}, { $set: {lastStatus: Date.now()}})
+        res.sendStatus(200);
+
+    } catch {
+        res.sendStatus(500);
     }
 })
 
