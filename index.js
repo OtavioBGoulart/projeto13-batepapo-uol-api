@@ -154,7 +154,6 @@ app.post("/status", async (req, res) => {
             return;
         }
 
-        console.log(userExists);
 
         await userscollections.updateOne({name: user.toLowerCase()}, { $set: {lastStatus: Date.now()}})
         res.sendStatus(200);
@@ -164,5 +163,23 @@ app.post("/status", async (req, res) => {
     }
 })
 
+setInterval(async () => {
+
+    try {
+        const participants = await userscollections.find().toArray();
+        
+        for (let p in participants) {
+            
+            if (Date.now() - participants[p].lastStatus > 10000 ) {
+
+                await userscollections.deleteOne({name: participants[p].name});
+                console.log(participants[p].name + "deletado")
+                await messagescolletiosn.insertOne({ from: participants[p].name.toLowerCase(), to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
+            }
+        }
+    } catch {
+        console.log("Deu erro")
+    } 
+}, 15000)
 
 app.listen(5000, () => console.log("Server running in port 5000")); 
