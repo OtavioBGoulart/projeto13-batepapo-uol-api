@@ -62,7 +62,7 @@ app.post("/participants", async (req, res) => {
         }
 
         await userscollections.insertOne({ name: name.toLowerCase(), lastStatus: Date.now() });
-        await messagescolletiosn.insertOne({ from: name.toLowerCase(), to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
+        await messagescolletiosn.insertOne({ from: name.toLowerCase(), to: 'todos', text: 'entra na sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
         res.sendStatus(201);
     } catch (error) {
         console.log(error);
@@ -85,8 +85,7 @@ app.get("/participants", async (req, res) => {
 app.post("/messages", async (req, res) => {
 
     const { to, text, type } = req.body;
-    const user = req.headers.user
-    console.log(user);
+    const user = req.headers.user;
 
     const validation = messageSchema.validate(req.body, { abortEarly: false });
 
@@ -126,13 +125,13 @@ app.get("/messages", async (req, res) => {
 
         if (limit) {
 
-            messages = await messagescolletiosn.find({ $or: [{ to: "Todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
+            messages = await messagescolletiosn.find({ $or: [{ to: "todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
             const lastMessages = messages.slice(-limit);
             res.send(lastMessages);
             return;
         }
 
-        messages = await messagescolletiosn.find({ $or: [{ to: "Todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
+        messages = await messagescolletiosn.find({ $or: [{ to: "todos" }, { to: user.toLowerCase() }, { from: user.toLowerCase() }, { type: "message" }] }).toArray();
         res.send(messages);
 
     } catch {
@@ -172,7 +171,7 @@ setInterval(async () => {
             if (Date.now() - participants[p].lastStatus > 10000 ) {
 
                 await userscollections.deleteOne({name: participants[p].name});
-                await messagescolletiosn.insertOne({ from: participants[p].name.toLowerCase(), to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
+                await messagescolletiosn.insertOne({ from: participants[p].name.toLowerCase(), to: 'todos', text: 'sai da sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
             }
         }
     } catch {
