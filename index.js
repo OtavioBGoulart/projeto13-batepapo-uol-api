@@ -54,7 +54,6 @@ app.post("/participants", async (req, res) => {
     try {
 
         const userExists = await userscollections.find({ name: name.toLowerCase() }).toArray();
-        //console.log(userExists);
 
         if (userExists.length !== 0) {
 
@@ -173,7 +172,6 @@ setInterval(async () => {
             if (Date.now() - participants[p].lastStatus > 10000 ) {
 
                 await userscollections.deleteOne({name: participants[p].name});
-                console.log(participants[p].name + "deletado")
                 await messagescolletiosn.insertOne({ from: participants[p].name.toLowerCase(), to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjs().format("HH:mm:ss") });
             }
         }
